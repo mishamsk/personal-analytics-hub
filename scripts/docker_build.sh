@@ -21,7 +21,7 @@ docker build --target base \
 # Build the "worker" image
 #
 
-docker build --target base \
+docker build --target worker \
   --build-arg "SUPERSET_VERSION=${SUPERSET_VER}" \
   -t "${REPO_NAME}-worker:${SUPERSET_VER}" \
   -t "${REPO_NAME}-worker:latest" \

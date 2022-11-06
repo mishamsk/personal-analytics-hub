@@ -45,6 +45,9 @@ I assume you know basic docker and docker-compose. If not, please read [this](ht
 You will need to:
 * Make a copy of .env.sample and rename it to .env
 * Fill in all the variables in .env (although most have defaults buried in docker-compose.yml and scripts, but it is better to be explicit)
+* Run `source .env` to load all the variables into your environment
 * Run `make docker-reset` or `scripts/reset_and_init.sh` to build and run all the containers
 
 Voila! You should be able to access Superset at http://localhost:8088 (or whatever you set SUPERSET_PORT to in .env)
+
+In order to see example dashboards, you will need to log in as admin and import them using `superset/backups/export_assets.zip` backup.

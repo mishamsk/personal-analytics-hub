@@ -1,0 +1,70 @@
+version: 2
+
+models:
+  - name: stg_economy__x_change_rate
+    description: "XChange rates for currencies used in transactions"
+    tests:
+      - dbt_expectations.expect_compound_columns_to_be_unique:
+          column_list: ["ts", "currency_code"]
+      - dbt_utils.recency:
+          datepart: day
+          field: ts
+          interval: 1
+          config:
+            severity: warn
+    columns:
+      - name: x_change_rate_id
+        description: "Unique identifier for the exchange rate"
+        tests:
+          - not_null
+          - unique
+      - name: ts
+        description: "Timestamp of the exchange rate"
+        tests:
+          - not_null
+      - name: base_currency_code
+        description: "Base currency code"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_value_lengths_to_equal:
+              value: 3
+      - name: currency_code
+        description: "Currency code"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_value_lengths_to_equal:
+              value: 3
+      - name: rate
+        description: "Exchange rate"
+        tests:
+          - not_null
+  - name: stg_economy__cpi
+    description: "Inflation data from the US Bureau of Labor Statistics"
+    tests:
+      - dbt_expectations.expect_compound_columns_to_be_unique:
+          column_list: ["date", "area_code", "item_code"]
+      - dbt_utils.recency:
+          datepart: month
+          field: date
+          interval: 2
+          config:
+            severity: warn
+    columns:
+      - name: date
+        description: "Date of the CPI data (first date of the month)"
+        tests:
+          - not_null
+      - name: area_code
+        description: "Area code per CPI classification (see https://download.bls.gov/pub/time.series/cw/cw.area)"
+        tests:
+          - not_null
+      - name: item_code
+        description: "Item code per CPI classification (see https://download.bls.gov/pub/time.series/cw/cw.item)"
+        tests:
+          - not_null
+      - name: value
+        description: "CPI value (against the base year)"
+        tests:
+          - not_null
+      - name: footnotes
+        description: "Footnotes for the CPI value"

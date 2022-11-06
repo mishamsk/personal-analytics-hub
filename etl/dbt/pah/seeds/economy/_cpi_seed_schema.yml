@@ -1,0 +1,21 @@
+version: 2
+
+seeds:
+  - name: cpi_area_codes
+    description: "CPI Area Codes Dictionary"
+    config:
+      column_types:
+        area_code: varchar(4)
+        area_name: text
+        display_level: integer
+        selectable: varchar(1)
+        sort_sequence: integer
+  - name: cpi_item_codes
+    description: "CPI Item Codes Dictionary"
+    config:
+      column_types:
+        item_code: varchar(10)
+        item_name: text
+        display_level: integer
+        selectable: varchar(1)
+        sort_sequence: integer

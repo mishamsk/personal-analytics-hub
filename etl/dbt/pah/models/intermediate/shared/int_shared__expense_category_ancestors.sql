@@ -1,0 +1,1 @@
+{{ explode_ancestors("stg_drebedengi__expense_category", "expense_category_id", "name") }}

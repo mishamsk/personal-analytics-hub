@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: nerddiary
+    schema: nerddiary
+    tables:
+      - name: pill_log
+      - name: morning_log
+      - name: headache_mike_log
+      - name: headache_maria_log

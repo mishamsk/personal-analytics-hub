@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: economy
+    schema: economy
+    tables:
+      - name: x_change_rate
+      - name: cpi

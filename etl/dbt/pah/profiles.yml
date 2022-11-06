@@ -1,0 +1,14 @@
+config:
+  send_anonymous_usage_stats: false
+pah:
+  target: prod
+  outputs:
+    prod:
+      type: postgres
+      host: "{{ env_var('PAH_DATABASE_HOST') }}"
+      port: "{{ env_var('PAH_DATABASE_PORT') | as_number }}"
+      schema: default
+      user: "{{ env_var('PAH_POSTGRES_DB') }}"
+      password: "{{ env_var('PAH_POSTGRES_PASSWORD') }}"
+      dbname: "{{ env_var('PAH_POSTGRES_DB') }}"
+      threads: 1

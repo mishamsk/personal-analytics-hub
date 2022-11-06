@@ -1,0 +1,42 @@
+name: "pah"
+version: "1.0.0"
+config-version: 2
+
+profile: "pah"
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+vars:
+  "dbt_date:time_zone": "America/New_York"
+
+seeds:
+  +schema: "seeds"
+  pah:
+    drebedengi:
+      +schema: drebedengi
+    economy:
+      +schema: economy
+models:
+  +materialized: view
+  pah:
+    staging:
+      +schema: "staging"
+      # drebedengi:
+    intermediate:
+      +schema: "int"
+    marts:
+      +materialized: table
+      expenses:
+        +schema: "expenses"
+    utilities:
+      +schema: "utils"

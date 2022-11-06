@@ -1,0 +1,13 @@
+version: 2
+
+sources:
+  - name: drebedengi
+    schema: drebedengi
+    tables:
+      - name: account
+      - name: change_record
+      - name: currency
+      - name: expense_category
+      - name: income_source
+      - name: tag
+      - name: transaction

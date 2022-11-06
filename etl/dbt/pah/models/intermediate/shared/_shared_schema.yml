@@ -1,0 +1,171 @@
+version: 2
+models:
+  - name: int_shared__transaction_in_usd
+    description: ""
+    columns:
+      - name: transaction_id
+        description: ""
+
+      - name: budget_object_id
+        description: ""
+
+      - name: user_id
+        description: ""
+
+      - name: budget_family_id
+        description: ""
+
+      - name: is_loan_transfer
+        description: ""
+
+      - name: operation_date
+        description: ""
+
+      - name: operation_type
+        description: ""
+
+      - name: account_id
+        description: ""
+
+      - name: amount_usd
+        description: ""
+
+      - name: comment
+        description: ""
+
+      - name: group_id
+        description: ""
+
+  - name: int_shared__x_change_rate
+    description: ""
+    columns:
+      - name: ts
+        description: ""
+
+      - name: currency_code
+        description: ""
+
+      - name: rate
+        description: ""
+
+  - name: int_shared__expense_category_ancestors
+    description: "A view that for each expense category contains a row for every ancestor of a category alongside it's name and distance from the given category. The top level catogiries parent name is taken from PAH_NO_PARENT_VALUE env value or `__NO_PARENT__` by default."
+    columns:
+      - name: expense_category_id
+        description: ""
+        tests:
+          - relationships:
+              to: ref('stg_drebedengi__expense_category')
+              field: expense_category_id
+
+      - name: name
+        description: ""
+        tests:
+          - relationships:
+              to: ref('stg_drebedengi__expense_category')
+              field: name
+
+      - name: depth
+        description: ""
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 1"
+
+      - name: ancestor_id
+        description: ""
+        tests:
+          - dbt_utils.relationships_where:
+              to: ref('stg_drebedengi__expense_category')
+              field: expense_category_id
+              from_condition: ancestor_id <> -1
+
+      - name: ancestor_distance
+        description: ""
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 1"
+
+      - name: ancestor_name
+        description: ""
+        tests:
+          - dbt_utils.relationships_where:
+              to: ref('stg_drebedengi__expense_category')
+              field: name
+              from_condition: ancestor_id <> -1
+  - name: int_shared__expense_category_with_group
+    description: ""
+    tests:
+      - unique:
+          column_name: expense_category_id
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+          compare_model: ref("stg_drebedengi__expense_category")
+    columns:
+      - name: expense_category_id
+        description: ""
+        tests:
+          - relationships:
+              to: ref('stg_drebedengi__expense_category')
+              field: expense_category_id
+
+      - name: name
+        description: ""
+        tests:
+          - relationships:
+              to: ref('stg_drebedengi__expense_category')
+              field: name
+
+      - name: depth
+        description: ""
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 1"
+
+      - name: category_group
+        description: ""
+        tests:
+          - not_null
+          - relationships:
+              to: ref('expense_category_group')
+              field: category_group
+
+  - name: int_shared__all_categories
+    description: ""
+    columns:
+      - name: category_id
+        description: ""
+
+      - name: category_name
+        description: ""
+
+      - name: parent_id
+        description: ""
+
+      - name: object_type
+        description: ""
+  - name: int_shared__cpi
+    description: "Inflation data from the US Bureau of Labor Statistics"
+    columns:
+      - name: date
+        description: "First day of the month for which the CPI is reported"
+
+      - name: area_code
+        description: "Area code for the CPI area"
+
+      - name: item_code
+        description: "Item code for the CPI item"
+
+      - name: value
+        description: "CPI value (increase against base year) for the given area and item"
+
+      - name: footnotes
+        description: ""
+
+      - name: area_name
+        description: "Area name for the CPI area"
+        tests:
+          - not_null
+
+      - name: item_name
+        description: "Item name for the CPI item"
+        tests:
+          - not_null

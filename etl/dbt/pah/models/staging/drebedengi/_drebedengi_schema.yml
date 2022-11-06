@@ -1,0 +1,150 @@
+version: 2
+models:
+  - name: stg_drebedengi__account
+    description: ""
+    columns:
+      - name: id
+        description: ""
+      - name: budget_family_id
+        description: ""
+
+      - name: object_type
+        description: ""
+
+      - name: name
+        description: ""
+
+      - name: is_hidden
+        description: ""
+
+      - name: is_autohide
+        description: ""
+
+      - name: is_loan
+        description: ""
+
+      - name: sort
+        description: ""
+
+      - name: wallet_user_id
+        description: ""
+
+      - name: icon_id
+        description: ""
+
+  - name: stg_drebedengi__change_record
+    description: ""
+    columns:
+      - name: revision_id
+        description: ""
+
+      - name: action_type
+        description: ""
+
+      - name: change_object_type
+        description: ""
+
+      - name: object_id
+        description: ""
+
+      - name: date
+        description: ""
+
+  - name: stg_drebedengi__currency
+    description: ""
+    columns:
+      - name: id
+        description: ""
+
+      - name: user_name
+        description: ""
+
+      - name: currency_code
+        description: ""
+
+      - name: exchange_rate
+        description: ""
+
+      - name: budget_family_id
+        description: ""
+
+      - name: is_default
+        description: ""
+
+      - name: is_autoupdate
+        description: ""
+
+      - name: is_hidden
+        description: ""
+
+  - name: stg_drebedengi__expense_category
+    description: ""
+    columns:
+      - name: id
+        description: ""
+
+      - name: parent_id
+        description: ""
+
+      - name: budget_family_id
+        description: ""
+
+      - name: object_type
+        description: ""
+
+      - name: name
+        description: ""
+
+      - name: is_hidden
+        description: ""
+
+      - name: sort
+        description: ""
+
+  - name: stg_drebedengi__income_source
+    description: ""
+    columns:
+      - name: id
+        description: ""
+
+      - name: parent_id
+        description: ""
+
+      - name: budget_family_id
+        description: ""
+
+      - name: object_type
+        description: ""
+
+      - name: name
+        description: ""
+
+      - name: is_hidden
+        description: ""
+
+      - name: sort
+        description: ""
+
+  - name: stg_drebedengi__tag
+    description: ""
+    columns:
+      - name: id
+        description: ""
+
+      - name: parent_id
+        description: ""
+
+      - name: budget_family_id
+        description: ""
+
+      - name: name
+        description: ""
+
+      - name: is_hidden
+        description: ""
+
+      - name: is_shared
+        description: ""
+
+      - name: sort
+        description: ""

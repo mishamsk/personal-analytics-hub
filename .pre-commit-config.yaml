@@ -1,0 +1,33 @@
+exclude: ".*dbt/.*\\.sql$"
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+        exclude: ".*jinja2$"
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+        exclude: .bumpversion.cfg
+      - id: check-added-large-files
+  - repo: https://github.com/pre-commit/mirrors-isort
+    rev: v5.10.1
+    hooks:
+      - id: isort
+        args: ["--filter-files"]
+  - repo: https://github.com/ambv/black
+    rev: 22.10.0
+    hooks:
+      - id: black
+        args: ["--config", "pyproject.toml"]
+  - repo: https://github.com/pycqa/flake8
+    rev: 5.0.4
+    hooks:
+      - id: flake8
+  - repo: https://github.com/python-poetry/poetry
+    rev: "1.2.1"
+    hooks:
+      - id: poetry-check
+      # - id: poetry-lock

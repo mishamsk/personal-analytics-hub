@@ -1,0 +1,9 @@
+version: 2
+
+seeds:
+  - name: expense_category_group
+    description: "Manual group assignment for expense categories"
+    config:
+      column_types:
+        name: text
+        category_group: text

@@ -43,7 +43,7 @@ services:
       POSTGRES_MULTIPLE_DATABASES: superset,${PAH_POSTGRES_DB:-pah}
     container_name: pah_db
     ports:
-      - '${PAH_DB_PORT:-5432}:5432'
+      - '${PAH_DATABASE_PORT:-5432}:5432'
     volumes:
       - db-data:/var/lib/postgresql/data
     networks:

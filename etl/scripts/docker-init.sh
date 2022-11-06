@@ -17,11 +17,11 @@ EOF
 }
 
 # Wait for the database
-psql $PAH_DATABASE_URL -p 5542 -c "select 1" &>/dev/null
+psql $PAH_DATABASE_URL -c "select 1" &>/dev/null
 while [ $? -ne 0 ]; do
   echo "Waiting for database to be ready..."
   sleep 1
-  psql $PAH_DATABASE_URL -p 5542 -c "select 1" &>/dev/null
+  psql $PAH_DATABASE_URL -c "select 1" &>/dev/null
 done
 
 # Wait for the superset init container to finish

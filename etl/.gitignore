@@ -1,0 +1,2 @@
+# inside the container - the lock file will re-generate during image build anyway
+/popetry.lock

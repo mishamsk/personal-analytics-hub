@@ -51,7 +51,7 @@ services:
   etl:
     image: pah/etl:${PAH_PY_VER:-3.10}
     restart: unless-stopped
-    tty: true
+    init: true
     volumes:
       - ./etl:/app/
     env_file:
@@ -66,7 +66,7 @@ services:
     depends_on:
       - postgres
   etl-init:
-    image: pah/etl:${PAH_PY_VER:-3.10}
+    image: pah/etl-init:${PAH_PY_VER:-3.10}
     volumes:
       - ./etl:/app/
     env_file:

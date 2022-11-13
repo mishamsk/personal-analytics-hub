@@ -7,7 +7,7 @@ REPO_NAME="${REPO_PREFIX}/superset"
 SUPERSET_VER="${PAH_SUPERSET_VER:-2.0.0}"
 
 echo "Building Superset Docker images"
-
+echo "Building Superset base image"
 #
 # Build the "base" image used for app, init abd beat
 #
@@ -17,10 +17,10 @@ docker build --target base \
   -t "${REPO_NAME}:latest" \
   superset
 
+echo "Building Superset worker image"
 #
 # Build the "worker" image
 #
-
 docker build --target worker \
   --build-arg "SUPERSET_VERSION=${SUPERSET_VER}" \
   -t "${REPO_NAME}-worker:${SUPERSET_VER}" \
@@ -31,15 +31,24 @@ REPO_NAME="${REPO_PREFIX}/etl"
 PY_VER="${PAH_PY_VER:-3.10}"
 
 echo "Building ETL Docker images"
+#
+# Build the base etl image (used for init)
+#
+echo "Building ETL base image"
+docker build --target base \
+  --build-arg "PY_VER=${PY_VER}" \
+  -t "${REPO_NAME}-init:${PY_VER}" \
+  -t "${REPO_NAME}-init:latest" \
+  etl
 
 #
-# Build the etl image
+# Build the base full image with cron, mailer (used for etl)
 #
-docker build \
+echo "Building ETL full image"
+docker build --target full \
   --build-arg "PY_VER=${PY_VER}" \
   --build-arg "PAH_SUPERSET_ADMIN_EMAIL=${PAH_SUPERSET_ADMIN_EMAIL:-pah@localhost}" \
   --build-arg "PAH_NULLMAILER_REMOTE_SPEC=${PAH_NULLMAILER_REMOTE_SPEC}" \
-  --build-arg "PAH_ETL_SCHEDULE=${PAH_ETL_SCHEDULE:-0 0 * * *}" \
   -t "${REPO_NAME}:${PY_VER}" \
   -t "${REPO_NAME}:latest" \
   etl

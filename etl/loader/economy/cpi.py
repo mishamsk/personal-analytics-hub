@@ -50,13 +50,13 @@ def load_cpi_data(
     start_date: datetime | date,
     area_code: str,
     item_codes: t.List[str],
-) -> None:
+) -> bool:
 
     if datetime.now().replace(month=datetime.now().month - 1, day=1).strftime(
         "%Y-%m"
     ) == start_date.strftime("%Y-%m"):
         logger.info("No CPI data to load")
-        return
+        return True
 
     headers = {"Content-type": "application/json"}
     # TODO: it doesn't check for the limit of 10 years
@@ -70,7 +70,7 @@ def load_cpi_data(
     series_re = re.compile(r"CUUR(?P<area_code>\w{4})(?P<item_code>\w+)")
 
     with requests.Session() as s:
-        cpi_data = s.post(BLS_API_V1_ENDPOINT, data=data, headers=headers).json()
+        cpi_data = s.post(BLS_API_V1_ENDPOINT, data=data, headers=headers, timeout=(3, 30)).json()
 
         if (
             cpi_data["status"] != "REQUEST_SUCCEEDED"
@@ -80,7 +80,7 @@ def load_cpi_data(
             logger.error(
                 f"Failed to load CPI data for area_code: {area_code} and item_codes: {item_codes}. Got response:\n {cpi_data}"
             )
-            return
+            return False
 
         for series in cpi_data["Results"]["series"]:
             series_id = series["seriesID"]
@@ -115,45 +115,57 @@ def load_cpi_data(
                     )
                 )
 
+    return True
 
-def load() -> None:
+
+def load() -> bool:
     logger.info(
         f"CPI loader started. Area code: {config.cpi_config.area_code}. Item codes: {config.cpi_config.item_codes}"
     )
 
-    with get_session() as session:
-        item_codes_start = 0
-        item_codes_end = min(25, len(config.cpi_config.item_codes))
+    res = True
+    try:
+        with get_session() as session:
+            item_codes_start = 0
+            item_codes_end = min(25, len(config.cpi_config.item_codes))
 
-        while item_codes_start < len(config.cpi_config.item_codes):
-            logger.debug(
-                f"Loading CPI data for item codes: {config.cpi_config.item_codes[item_codes_start:item_codes_end]}"
-            )
-
-            item_codes = config.cpi_config.item_codes[item_codes_start:item_codes_end]
-
-            last_cpi_ts = get_earliest_cpi_data(session, config.cpi_config.area_code, item_codes)
-
-            if last_cpi_ts is None:
-                logger.info(
-                    f"No previous records found. Loading all data since config start date: {config.cpi_config.start_date}"
+            while item_codes_start < len(config.cpi_config.item_codes):
+                logger.debug(
+                    f"Loading CPI data for item codes: {config.cpi_config.item_codes[item_codes_start:item_codes_end]}"
                 )
-                load_cpi_data(
-                    session,
-                    config.cpi_config.start_date,
-                    config.cpi_config.area_code,
-                    item_codes,
+
+                item_codes = config.cpi_config.item_codes[item_codes_start:item_codes_end]
+
+                last_cpi_ts = get_earliest_cpi_data(
+                    session, config.cpi_config.area_code, item_codes
                 )
-            else:
-                logger.info(f"Loading data since: {last_cpi_ts}")
-                load_cpi_data(session, last_cpi_ts, config.cpi_config.area_code, item_codes)
 
-            item_codes_start = item_codes_end
-            item_codes_end = min(item_codes_end + 25, len(config.cpi_config.item_codes))
+                if last_cpi_ts is None:
+                    logger.info(
+                        f"No previous records found. Loading all data since config start date: {config.cpi_config.start_date}"
+                    )
+                    res = load_cpi_data(
+                        session,
+                        config.cpi_config.start_date,
+                        config.cpi_config.area_code,
+                        item_codes,
+                    )
+                else:
+                    logger.info(f"Loading data since: {last_cpi_ts}")
+                    res = load_cpi_data(
+                        session, last_cpi_ts, config.cpi_config.area_code, item_codes
+                    )
 
-        session.commit()
+                item_codes_start = item_codes_end
+                item_codes_end = min(item_codes_end + 25, len(config.cpi_config.item_codes))
+
+            session.commit()
+    except Exception:
+        logger.exception("Error loading CPI")
+        return False
 
     logger.info("CPI loader finished")
+    return res
 
 
 loader_registry.register_loader("cpi", load)

@@ -2,18 +2,20 @@
 import logging
 import os
 import sys
-from logging.config import dictConfig
+from pathlib import Path
 
 import click
 from dotenv import load_dotenv
 from loader import __version__
 from loader.config import config
 from loader.load import loader_registry
-from loader.log import get_log_config
+from loader.log import config_logging
 
 from typing import List
 
 logger = logging.getLogger(__name__)
+
+cwd = Path.cwd()
 
 
 def version_msg() -> str:
@@ -28,10 +30,17 @@ def version_msg() -> str:
 @click.version_option(__version__, "-V", "--version", message=version_msg())
 @click.option("-v", "--verbose", is_flag=True, help="Force all log levels to debug", default=False)
 @click.option(
-    "--log-file",
-    type=click.Path(dir_okay=False, writable=True),
-    default=None,
-    help="File to be used for logging",
+    "-i",
+    "--interactive",
+    is_flag=True,
+    help="Run interactively - will output log to stdout",
+    default=False,
+)
+@click.option(
+    "--log-path",
+    type=click.Path(exists=True, writable=True, dir_okay=True, file_okay=False, path_type=Path),
+    default=cwd,
+    help="Folder for log file(s). Defaults to the current directory",
 )
 @click.option(
     "--log-level",
@@ -50,18 +59,23 @@ def version_msg() -> str:
     show_default=True,
 )
 def cli(
-    log_file: str,
+    interactive: bool,
+    log_path: Path,
     log_level: str,
     verbose: bool,
 ) -> None:
     """Main entry point"""
-    dictConfig(
-        get_log_config(
-            __name__.split(".")[0],
-            log_level=log_level if not verbose else "DEBUG",
-            log_file=log_file,
-        )
+    config_logging(
+        "loader",
+        interactive=interactive,
+        log_level=log_level if not verbose else "DEBUG",
+        log_path=log_path,
+        tracebacks_suppress=["click"],
     )
+
+    zeep_logger = logging.getLogger("zeep")
+    zeep_logger.setLevel(logging.ERROR)
+
     logger.debug("Init cli successful")
 
 
@@ -85,15 +99,26 @@ def load(all: bool, name: List[str] | None) -> None:
     """Load data from the source."""
     logger.debug(f"Loading for user {config.DREBEDENGI_LOGIN}")
 
+    loaded_successfully = True
+
     if name:
         for n in name:
-            loader_registry.load_one(n)
+            try:
+                if not loader_registry.load_one(n):
+                    loaded_successfully = False
+            except Exception:
+                logger.exception(f"Failed to load {n}")
+                loaded_successfully = False
     elif all:
-        loader_registry.load_all()
+        loaded_successfully = loader_registry.load_all()
     else:
-        logger.error("No loaders to run")
+        logger.warning("No loaders to run")
 
-    logger.info("Finished loading data without errors")
+    if loaded_successfully:
+        logger.info("Finished loading data without errors")
+    else:
+        logger.error("Finished loading data with errors")
+        exit(1)
 
 
 def run_cli() -> None:

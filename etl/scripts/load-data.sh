@@ -8,10 +8,10 @@ until [ $? -ne 0 ]; do
   ping -c 1 pah_etl_init &>/dev/null
 done
 
-set -x
 set -e
 
-poetry run loader load
+cd /app/dbt/pah
+poetry run loader --log-path /app/log/ load
 # some weird bug with dbt hanging...
 sleep 1
-cd /app/dbt/pah && poetry run dbt run
+poetry run dbt run >> /app/log/dbt.log

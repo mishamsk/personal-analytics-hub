@@ -72,6 +72,7 @@ def do_poll_load(
         r = requests.get(
             f"{ND_LOG_API_URL}/{user_id}",
             params=params,
+            timeout=(3, 30),
         )
         logger.debug(f"Request sent {r.request.url}")
         logger.debug(f"Got response: {r.status_code} {r.text}")
@@ -91,21 +92,26 @@ def do_poll_load(
     session.commit()
 
 
-def load() -> None:
+def load() -> bool:
     logger.info("NerdDiary loader started")
-    with get_session() as session:
-        logger.info("Loading pill logs")
-        do_poll_load(session, "Pain relief", PillLog, [MIKE_TELEGRAM_ID, MARIA_TELEGRAM_ID])
-        logger.info("Pill logs loaded")
-        logger.info("Loading morning logs")
-        do_poll_load(session, "Morning", MorningLog, [MIKE_TELEGRAM_ID])
-        logger.info("Morning logs loaded")
-        logger.info("Loading headache logs")
-        do_poll_load(session, "Headache", HeadacheMikeLog, [MIKE_TELEGRAM_ID])
-        do_poll_load(session, "Headache", HeadacheMariaLog, [MARIA_TELEGRAM_ID])
-        logger.info("Headache logs loaded")
+    try:
+        with get_session() as session:
+            logger.info("Loading pill logs")
+            do_poll_load(session, "Pain relief", PillLog, [MIKE_TELEGRAM_ID, MARIA_TELEGRAM_ID])
+            logger.info("Pill logs loaded")
+            logger.info("Loading morning logs")
+            do_poll_load(session, "Morning", MorningLog, [MIKE_TELEGRAM_ID])
+            logger.info("Morning logs loaded")
+            logger.info("Loading headache logs")
+            do_poll_load(session, "Headache", HeadacheMikeLog, [MIKE_TELEGRAM_ID])
+            do_poll_load(session, "Headache", HeadacheMariaLog, [MARIA_TELEGRAM_ID])
+            logger.info("Headache logs loaded")
+    except Exception:
+        logger.exception("Error loading NerdDiary")
+        return False
 
     logger.info("NerdDiary loader finished")
+    return True
 
 
 loader_registry.register_loader("nerddiary", load)

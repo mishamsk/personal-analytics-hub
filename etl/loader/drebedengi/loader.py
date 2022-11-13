@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from attrs import asdict
 from drebedengi import DrebedengiAPI
@@ -10,6 +10,7 @@ from drebedengi.model import ActionType, ObjectType, ReportPeriod
 from loader.config import config
 from loader.drebedengi.models import (
     LAST_LOADED_REVISION_KEY,
+    SCHEMA_NAME,
     Account,
     ChangeRecord,
     Currency,
@@ -21,6 +22,8 @@ from loader.drebedengi.models import (
 from loader.load import loader_registry
 from loader.models import Config
 from loader.session import get_session
+from sqlalchemy.sql import func
+from sqlalchemy.sql import text as sa_text
 
 import typing as t
 
@@ -39,6 +42,10 @@ def get_last_loaded_revision(session: Session) -> int:
     return int(db_config)
 
 
+def get_last_revision_date(session: Session) -> datetime | None:
+    return session.query(func.max(ChangeRecord.last_modified)).scalar()  # type: ignore
+
+
 def set_current_revision(session: Session, revision: int) -> None:
     db_config = session.query(Config).filter(Config.param == LAST_LOADED_REVISION_KEY).first()
     if db_config is None:
@@ -54,6 +61,15 @@ def do_full_load(session: Session) -> None:
         login=config.DREBEDENGI_LOGIN,
         password=config.DREBEDENGI_PASSWORD,
     )
+
+    session.execute(sa_text(f"TRUNCATE TABLE {SCHEMA_NAME}.{ChangeRecord.__tablename__}"))
+    session.execute(sa_text(f"TRUNCATE TABLE {SCHEMA_NAME}.{Currency.__tablename__}"))
+    session.execute(sa_text(f"TRUNCATE TABLE {SCHEMA_NAME}.{Account.__tablename__}"))
+    session.execute(sa_text(f"TRUNCATE TABLE {SCHEMA_NAME}.{Tag.__tablename__}"))
+    session.execute(sa_text(f"TRUNCATE TABLE {SCHEMA_NAME}.{IncomeSource.__tablename__}"))
+    session.execute(sa_text(f"TRUNCATE TABLE {SCHEMA_NAME}.{ExpenseCategory.__tablename__}"))
+    session.execute(sa_text(f"TRUNCATE TABLE {SCHEMA_NAME}.{Transaction.__tablename__}"))
+    session.commit()
 
     # Get current revision
     cur_rev = api.get_current_revision()
@@ -308,22 +324,34 @@ def do_incremental_load(session: Session, last_rev: int) -> None:
     session.commit()
 
 
-def load() -> None:
+def load() -> bool:
     logger.info("Drebedengi loader started")
-    with get_session() as session:
-        logger.debug("Getting last revision from Drebedengi")
-        last_rev = get_last_loaded_revision(session)
-        logger.debug(f"Last revision: {last_rev}")
+    try:
+        with get_session() as session:
+            logger.debug("Getting last revision from Drebedengi")
+            last_rev = get_last_loaded_revision(session)
+            logger.debug(f"Last revision: {last_rev}")
 
-        if last_rev == -1:
-            logger.info("No last revision found, loading all data")
-            do_full_load(session)
-        else:
-            # TODO: revert to truncate & full load if last revision is too old (month+)
-            logger.info(f"Last loaded revision: {last_rev}. Doing incremental load")
-            do_incremental_load(session, last_rev)
+            if last_rev == -1:
+                logger.info("No last revision found, loading all data")
+                do_full_load(session)
+            else:
+                logger.info("Checking time since last transaction")
+                last_rev_dt = get_last_revision_date(session)
+                if last_rev_dt is not None and last_rev_dt > datetime.now() - timedelta(days=30):
+                    logger.info(f"Last loaded revision: {last_rev}. Doing incremental load")
+                    do_incremental_load(session, last_rev)
+                else:
+                    logger.info(
+                        f"Last loaded revision: {last_rev}. Last revision is too old, doing full load"
+                    )
+                    do_full_load(session)
+    except Exception:
+        logger.exception("Error loading NerdDiary")
+        return False
 
     logger.info("Drebedengi loader finished")
+    return True
 
 
 loader_registry.register_loader("drebedengi", load)

@@ -57,6 +57,7 @@ def config_logging(
 ) -> None:
     """Configure logging for the application."""
     logger = logging.getLogger(name)
+    logger.setLevel(log_level)
 
     if interactive:
         if tracebacks_suppress is None:
@@ -102,8 +103,6 @@ def config_logging(
         console_debug_handler.setFormatter(
             logging.Formatter(fmt="%(message)s", datefmt="[%Y-%m-%d %H:%M:%S]")
         )
-
-        logger.setLevel(log_level)
 
         logger.addHandler(console_info_handler)
         logger.addHandler(console_warn_error_handler)

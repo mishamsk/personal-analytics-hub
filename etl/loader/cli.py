@@ -67,10 +67,14 @@ def cli(
     """Main entry point"""
     config_logging(
         "loader",
+        interactive=interactive,
         log_level=log_level if not verbose else "DEBUG",
         log_path=log_path,
-        tracebacks_suppress=["click", "antlr4"],
+        tracebacks_suppress=["click"],
     )
+
+    zeep_logger = logging.getLogger("zeep")
+    zeep_logger.setLevel(logging.ERROR)
 
     logger.debug("Init cli successful")
 

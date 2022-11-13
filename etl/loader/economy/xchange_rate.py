@@ -57,7 +57,7 @@ def load_xchange_rates(
 
     with requests.Session() as s:
         logger.debug(f"Downloading fiat xchange rates archive from {FIAT_XCHANGE_RATE_ARCHIVE_URL}")
-        hist_rates_zip = s.get(FIAT_XCHANGE_RATE_ARCHIVE_URL)
+        hist_rates_zip = s.get(FIAT_XCHANGE_RATE_ARCHIVE_URL, timeout=(3, 60))
 
         with zipfile.ZipFile(io.BytesIO(hist_rates_zip.content)) as z:
             with io.TextIOWrapper(z.open("eurofxref-hist.csv"), encoding="utf-8", newline="") as f:
@@ -106,7 +106,9 @@ def load_xchange_rates(
                         crypto=crypto, fiat="USD", limit=limit, to_ts=to_ts
                     )
 
-                    hist_rates_json = s.get(url).json()
+                    hist_rates_json = s.get(url, timeout=(3, 60)).json()
+                    if "Data" not in hist_rates_json and "Data" not in hist_rates_json["Data"]:
+                        raise RuntimeError(f"Unexpected json from for {crypto}: {hist_rates_json}")
 
                     for hist_rate in hist_rates_json["Data"]["Data"]:
                         dt = datetime.fromtimestamp(hist_rate["time"])
@@ -158,21 +160,26 @@ def do_incremental_load(session: Session, last_ts: datetime) -> None:
     session.commit()
 
 
-def load() -> None:
+def load() -> bool:
     logger.info("XChange rate loader started")
-    with get_session() as session:
-        logger.debug("Getting last loaded xchange rate")
-        last_ts = get_last_xchange_rate(session)
-        logger.debug(f"Last loaded xchange rate: {last_ts or 'None'}")
+    try:
+        with get_session() as session:
+            logger.debug("Getting last loaded xchange rate")
+            last_ts = get_last_xchange_rate(session)
+            logger.debug(f"Last loaded xchange rate: {last_ts or 'None'}")
 
-        if last_ts is None:
-            logger.info("No xchange rates loaded yet, doing full load")
-            do_full_load(session)
-        else:
-            logger.info(f"Last loaded xchange rate: {last_ts}. Doing incremental load")
-            do_incremental_load(session, last_ts)
+            if last_ts is None:
+                logger.info("No xchange rates loaded yet, doing full load")
+                do_full_load(session)
+            else:
+                logger.info(f"Last loaded xchange rate: {last_ts}. Doing incremental load")
+                do_incremental_load(session, last_ts)
+    except Exception:
+        logger.exception("Error loading NerdDiary")
+        return False
 
     logger.info("XChange rate loader finished")
+    return True
 
 
 loader_registry.register_loader("xchange_rates", load, prio=1)

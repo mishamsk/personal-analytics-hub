@@ -12,7 +12,7 @@ echo "Building Superset base image"
 # Build the "base" image used for app, init abd beat
 #
 docker build --target base \
-  --build-arg "SUPERSET_VERSION=${SUPERSET_VER}" \
+  --build-arg "SUPERSET_VER=${SUPERSET_VER}" \
   -t "${REPO_NAME}:${SUPERSET_VER}" \
   -t "${REPO_NAME}:latest" \
   superset
@@ -22,7 +22,7 @@ echo "Building Superset worker image"
 # Build the "worker" image
 #
 docker build --target worker \
-  --build-arg "SUPERSET_VERSION=${SUPERSET_VER}" \
+  --build-arg "SUPERSET_VER=${SUPERSET_VER}" \
   -t "${REPO_NAME}-worker:${SUPERSET_VER}" \
   -t "${REPO_NAME}-worker:latest" \
   superset

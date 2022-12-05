@@ -26,10 +26,10 @@ WORKDIR /app
 ######################################################################
 # Full image with mailer & cron...
 ######################################################################
+FROM base as full
+
 ARG PAH_SUPERSET_ADMIN_EMAIL=pah@localhost
 ARG PAH_NULLMAILER_REMOTE_SPEC=""
-
-FROM base as full
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \

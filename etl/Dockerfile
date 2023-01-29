@@ -5,6 +5,7 @@ ARG PY_VER=3.10
 FROM python:${PY_VER} as base
 
 RUN mkdir /app \
+    $$ apt-get clean \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     postgresql-client \

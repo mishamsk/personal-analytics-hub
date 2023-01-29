@@ -53,7 +53,7 @@ def load_cpi_data(
 ) -> bool:
 
     if datetime.now().replace(
-        month=12 if datetime.now().month == 12 else datetime.now().month - 1, day=1
+        month=12 if datetime.now().month == 1 else datetime.now().month - 1, day=1
     ).strftime("%Y-%m") == start_date.strftime("%Y-%m"):
         logger.info("No CPI data to load")
         return True

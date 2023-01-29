@@ -25,6 +25,9 @@ rich = "^12.6.0"
 [tool.poetry.scripts]
 loader = 'loader.cli:run_cli'
 
+[tool.black]
+line-length = 100
+
 [build-system]
 requires = ["poetry-core>=1.1.0"]
 build-backend = "poetry.core.masonry.api"
